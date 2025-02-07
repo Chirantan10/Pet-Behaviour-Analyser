@@ -13,6 +13,11 @@ from pydub import AudioSegment
 app = Flask(__name__)
 CORS(app)
 
+# Ensure FFmpeg is accessible
+if os.system("ffmpeg -version") != 0:
+    raise RuntimeError("FFmpeg is not installed or not found in PATH")
+
+
 # Remove hardcoded Windows paths, let pydub find FFmpeg automatically
 AudioSegment.converter = "ffmpeg"
 AudioSegment.ffprobe = "ffprobe"
@@ -62,7 +67,7 @@ def home():
 # Function to convert the audio file to WAV using pydub
 def convert_to_wav(input_file, output_file):
     try:
-        audio = AudioSegment.from_file(input_file)
+        audio = AudioSegment.from_file(input_file)  # Automatically detects format
         audio.export(output_file, format='wav')
         return output_file
     except Exception as e:
@@ -94,6 +99,8 @@ def process_audio():
     # Save the file with its original format
     uploaded_file.save(temp_file_path)
 
+    print(f"Uploaded file format: {uploaded_file.content_type}")
+    
     # Convert the uploaded audio to WAV format
     wav_file_path = 'temp_audio.wav'
     if not convert_to_wav(temp_file_path, wav_file_path):
